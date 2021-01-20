@@ -1,0 +1,77 @@
+from numpy.linalg import norm
+from numpy import arange,array,pi,cos,sin,copy
+from matplotlib import pyplot as plt
+
+#This function returns the derivative of each element in the input array. 
+def derivs(vars):
+    θ = vars[0] #separates out position components
+    ω = vars[1] #separates out velocity
+    g = 9.8 #gravity
+    l = 0.5 #length of pendulum in meters. 
+    q = 0.5 #drag coefficient, takes mass into account
+
+    θDeriv = ω #set derivative
+    ωDeriv = -g/l*sin(θ)-q*ω #set derivative
+    return array([θDeriv,ωDeriv]) #returns values
+
+#This function finds the trajectory with Euler's method
+def EulerTrajectory(θInitial, ωInitial, dt):
+    q = 0.5
+    g=9.8
+    l = 1.0
+    time = [0]
+    θ = [θInitial] #makes a copy of vector
+    ω = ωInitial #makes copy
+    while time[-1] <= 10: #while it's above ground
+        θ.append(θ[-1] + ω * dt) #Euler step in position
+        ω += -g/l*sin(θ[-1]) - q*ω
+        time.append(time[-1]+dt)
+       # a = array([-B2 * speed * v[0],-B2 * speed * v[1] - g]) #Drag and gravity forces as array for easy math
+        #ω += a * dt #Euler step velocity
+    return θ, time #returns the theta trajectory
+
+#This gets the trajectory using second-order Runge-Kutta
+def RK2Trajectory(θ,ω,dt):
+    theta = [θ]
+    time = [0]
+    vars = array([θ,ω]) #defines array with all needed values
+    while time[-1] <= 10:
+        k1 = dt * derivs(vars) #call derivative function to complete euler's steps
+        k2 = dt * derivs(vars + 1/2 * k1) #find values at half-step
+        vars += k2 #complete runge_kutta step
+        theta.append(vars[0])
+        time.append(time[-1] + dt)
+
+    return theta, time
+
+#this section sets up initial conditions to try out the functions on
+rInitial = array([0.,0.])
+speed = 50
+theta = 25 * pi/180
+vInitial = array([speed * cos(theta), speed * sin(theta)])
+EulerRanges = []
+RK2Ranges = []
+dt = 0.01
+t = [0]
+
+#only run when the half step isn't ridiculously small
+#    t.append(t[-1] + dt)
+#    print("setting dt to {:10.6f}".format(dt))
+    #get arrays in correct form for functions
+θ = pi/2
+ω = 0.0
+    #call functions
+#rangeEuler, time = EulerTrajectory(θ,ω,dt)
+rangeRK, timeb = RK2Trajectory(θ,ω,dt) #these functions return scalars
+#EulerRanges.append(rangeEuler)  #add them to arrays for plotting
+#RK2Ranges.append(rangeRK)
+
+fig,ax = plt.subplots(1,1) #this seems unnecessary for one plot
+
+ax.plot(time,rangeEuler,label='RK', color = "magenta") #plot x position versus time steps, this shows how much it changes within each small
+#step
+ax.plot(timeb,rangeRK,label='Euler', color = "springgreen")
+ax.set_facecolor('k')
+#ax.set_xscale('log') #the steps decrease rapidly, a logarithmic scale makes it clearer.
+ax.legend() #add legend
+plt.show()  #display the plot
